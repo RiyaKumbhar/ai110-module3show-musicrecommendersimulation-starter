@@ -49,6 +49,51 @@ Add 5 or more new song attributes to `data/songs.csv`, and update the scoring in
 
 ---
 
+## Challenge 3: Diversity penalty
+
+**Prompt used:**
+
+"Add a diversity penalty to `recommend_songs`. If a candidate song's artist is already in the top recommendations list, subtract points from its score. Do the same, with a smaller penalty, for a repeated genre. The first pick must not change, each penalty must appear in the song's reasons, and the default behavior must stay the same."
+
+**What the AI proposed and generated:**
+
+- First it checked the data: Chill Lofi returned LoRoom three times and lofi five times, so the problem was real.
+- **Option A:** drop duplicates after sorting. Simple, but it throws songs away and loses the score explanation.
+- **Option B (chosen):** pick songs one at a time and re-score the rest each round, so a song loses 1.0 point per song by the same artist already picked and 0.5 per song of the same genre. This is the same idea as MMR re-ranking.
+- Changes: `recommend_songs()` in `src/recommender.py` has new `artist_penalty` and `genre_penalty` arguments (both 0 by default); `--diverse` in `src/main.py`; three new tests in `tests/test_recommender.py`.
+
+**What I verified manually:**
+
+- Default output is identical to before (diffed against the saved run).
+- Hand-checked: Midnight Coding scored 4.39 and shows 3.89 after the 0.50 lofi penalty.
+- I ran all 14 profiles: the #1 song never changed, and distinct artists in the top 5 went up in every profile that had repeats (Chill Lofi: 2 → 5).
+- My first test failed because my penalty (2.0) was too small. The numbers were my mistake, not a code bug. I changed the test to 3.0.
+- **Trade-off:** a lofi fan now gets only 2 lofi songs of 5. The penalty sizes are my guesses and I have not tuned them.
+
+---
+
+## Challenge 4: Visual summary table
+
+**Prompt used:**
+
+"Suggest a way to use a library like `tabulate` or simple ASCII formatting to display the top recommendations as a table. The table must include the reasons for each score."
+
+**What the AI proposed and generated:**
+
+- It suggested two ways: `tabulate`, or plain ASCII. It checked first: `tabulate` is not installed and not in `requirements.txt`. So I chose plain ASCII with the standard library. No new dependency.
+- New file `src/report.py` has `format_table()`. Columns: rank, title, artist, genre, score out of the max, and a "Why (reasons)" column. Each reason is on its own line, and long reasons wrap.
+- `--format table` in `src/main.py` switches to it. The default output is unchanged.
+
+**What I verified manually:**
+
+- Every row of every table has the same width (a test checks this).
+- A test checks that genre, mood and energy reasons all appear in the table.
+- All flag combinations work together (`--mode`, `--diverse`, `--format`, `--compare`).
+- The empty profile shows "(no preferences given)" instead of a blank cell.
+- Limit: long titles and artist names wrap onto several lines. Very wide terminals are fine, but the table is about 115 characters wide, so it may wrap in a narrow window.
+
+---
+
 ## Design Pattern (SF10)
 
 > Document how AI helped you choose or implement a design pattern.

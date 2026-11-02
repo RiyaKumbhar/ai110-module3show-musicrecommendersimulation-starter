@@ -11,7 +11,10 @@ You will implement the functions in recommender.py:
 
 import argparse
 
-from recommender import STRATEGIES, load_songs, max_score, recommend_songs
+from recommender import (
+    ARTIST_PENALTY, GENRE_PENALTY, STRATEGIES, load_songs, max_score, recommend_songs,
+)
+from report import format_table
 
 
 PROFILES = {
@@ -60,18 +63,26 @@ ADVANCED_PROFILES = {
 ALL_PROFILES = {**PROFILES, **ADVERSARIAL_PROFILES, **ADVANCED_PROFILES}
 
 
-def show_ranking(songs, mode: str, width: int = 60) -> None:
+def show_ranking(songs, mode: str, diverse: bool = False, table: bool = False, width: int = 60) -> None:
     """Print the top 5 with reasons for every profile, ranked by one strategy."""
     strategy = STRATEGIES[mode]
     print(f"Mode: {strategy.name}")
+    if diverse:
+        print(f"Diversity penalty: artist -{ARTIST_PENALTY}, genre -{GENRE_PENALTY} per repeat")
 
     for name, user_prefs in ALL_PROFILES.items():
-        recommendations = recommend_songs(user_prefs, songs, k=5, strategy=strategy)
+        recommendations = recommend_songs(
+            user_prefs, songs, k=5, strategy=strategy, **_penalties(diverse)
+        )
 
         print()
         print("=" * width)
         print(f"{name}: {user_prefs}")
         print("=" * width)
+
+        if table:
+            print(format_table(recommendations, max_score(user_prefs, strategy)))
+            continue
 
         for rank, (song, score, explanation) in enumerate(recommendations, start=1):
             print(f"\n{rank}. {song['title']} - {song['artist']}")
@@ -83,7 +94,11 @@ def show_ranking(songs, mode: str, width: int = 60) -> None:
     print("\n" + "=" * width)
 
 
-def compare_modes(songs, width: int = 60) -> None:
+def _penalties(diverse: bool) -> dict:
+    return {"artist_penalty": ARTIST_PENALTY, "genre_penalty": GENRE_PENALTY} if diverse else {}
+
+
+def compare_modes(songs, diverse: bool = False, width: int = 60) -> None:
     """Print each profile's top 5 song titles under every mode, to see what a mode changes."""
     for name, user_prefs in ALL_PROFILES.items():
         print()
@@ -91,7 +106,7 @@ def compare_modes(songs, width: int = 60) -> None:
         print(name)
         print("=" * width)
         for mode, strategy in STRATEGIES.items():
-            titles = [s["title"] for s, _, _ in recommend_songs(user_prefs, songs, k=5, strategy=strategy)]
+            titles = [s["title"] for s, _, _ in recommend_songs(user_prefs, songs, k=5, strategy=strategy, **_penalties(diverse))]
             print(f"{strategy.name:>15}: " + " | ".join(titles))
     print("\n" + "=" * width)
 
@@ -106,13 +121,21 @@ def main() -> None:
         "--compare", action="store_true",
         help="show every profile's top 5 under all modes, side by side",
     )
+    parser.add_argument(
+        "--diverse", action="store_true",
+        help="penalize songs whose artist or genre is already in the top results",
+    )
+    parser.add_argument(
+        "--format", choices=("detailed", "table"), default="detailed",
+        help="detailed lists (default) or one ASCII table per profile",
+    )
     args = parser.parse_args()
 
     songs = load_songs("data/songs.csv")
     if args.compare:
-        compare_modes(songs)
+        compare_modes(songs, args.diverse)
     else:
-        show_ranking(songs, args.mode)
+        show_ranking(songs, args.mode, args.diverse, args.format == "table")
 
 
 if __name__ == "__main__":
