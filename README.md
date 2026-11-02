@@ -131,47 +131,73 @@ You can add more tests in `tests/test_recommender.py`.
 
 ## Sample Recommendation Output
 
-(.venv) (base) riyakumbhar@mac ai110-module3show-musicrecommendersimulation-starter % python3 src/main.py
-Loaded songs: 42
+Run from the project folder: `python3 src/main.py`. This is the first of the profiles it prints (default Genre-First mode):
 
+```text
 ============================================================
-Top 5 for: genre=pop, mood=happy, energy=0.8
+High-Energy Pop: {'genre': 'pop', 'mood': 'happy', 'energy': 0.9}
 ============================================================
 
 1. Sunrise City - Neon Echo
-   Score: 4.47 / 4.50
+   Score: 4.38 / 4.50
    Why:
      - genre match: pop (+2.0)
      - mood match: happy (+1.0)
-     - energy 0.82 is 0.02 from target 0.80 (+1.47)
+     - energy 0.82 is 0.08 from target 0.90 (+1.38)
 
 2. Candy Static - Neon Echo
-   Score: 3.38 / 4.50
+   Score: 3.47 / 4.50
    Why:
      - genre match: pop (+2.0)
-     - energy 0.88 is 0.08 from target 0.80 (+1.38)
+     - energy 0.88 is 0.02 from target 0.90 (+1.47)
 
 3. Gym Hero - Max Pulse
-   Score: 3.30 / 4.50
+   Score: 3.46 / 4.50
    Why:
      - genre match: pop (+2.0)
-     - energy 0.93 is 0.13 from target 0.80 (+1.30)
+     - energy 0.93 is 0.03 from target 0.90 (+1.46)
 
 4. Glass Hearts - Mira Lane
-   Score: 2.87 / 4.50
+   Score: 2.72 / 4.50
    Why:
      - genre match: pop (+2.0)
-     - energy 0.38 is 0.42 from target 0.80 (+0.87)
+     - energy 0.38 is 0.52 from target 0.90 (+0.72)
 
 5. Verano Eterno - Luna Cortez
-   Score: 2.47 / 4.50
+   Score: 2.32 / 4.50
    Why:
      - mood match: happy (+1.0)
-     - energy 0.78 is 0.02 from target 0.80 (+1.47)
+     - energy 0.78 is 0.12 from target 0.90 (+1.32)
+```
 
+The same profile as a table (`python3 src/main.py --format table`):
+
+```text
 ============================================================
+High-Energy Pop: {'genre': 'pop', 'mood': 'happy', 'energy': 0.9}
+============================================================
++---+---------------+-------------+-------+-----------+------------------------------------------------+
+| # | Title         | Artist      | Genre | Score     | Why (reasons)                                  |
++---+---------------+-------------+-------+-----------+------------------------------------------------+
+| 1 | Sunrise City  | Neon Echo   | pop   | 4.38/4.50 | - genre match: pop (+2.0)                      |
+|   |               |             |       |           | - mood match: happy (+1.0)                     |
+|   |               |             |       |           | - energy 0.82 is 0.08 from target 0.90 (+1.38) |
++---+---------------+-------------+-------+-----------+------------------------------------------------+
+| 2 | Candy Static  | Neon Echo   | pop   | 3.47/4.50 | - genre match: pop (+2.0)                      |
+|   |               |             |       |           | - energy 0.88 is 0.02 from target 0.90 (+1.47) |
++---+---------------+-------------+-------+-----------+------------------------------------------------+
+| 3 | Gym Hero      | Max Pulse   | pop   | 3.46/4.50 | - genre match: pop (+2.0)                      |
+|   |               |             |       |           | - energy 0.93 is 0.03 from target 0.90 (+1.46) |
++---+---------------+-------------+-------+-----------+------------------------------------------------+
+| 4 | Glass Hearts  | Mira Lane   | pop   | 2.72/4.50 | - genre match: pop (+2.0)                      |
+|   |               |             |       |           | - energy 0.38 is 0.52 from target 0.90 (+0.72) |
++---+---------------+-------------+-------+-----------+------------------------------------------------+
+| 5 | Verano Eterno | Luna Cortez | latin | 2.32/4.50 | - mood match: happy (+1.0)                     |
+|   |               |             |       |           | - energy 0.78 is 0.12 from target 0.90 (+1.32) |
++---+---------------+-------------+-------+-----------+------------------------------------------------+
+```
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->
+All flags: `--mode {genre-first,mood-first,energy-focused}`, `--compare`, `--diverse`, `--format {detailed,table}`.
 
 ---
 
@@ -673,28 +699,22 @@ Other ideas not yet tested: remove the mood check.
 
 ## Limitations and Risks
 
-Summarize some limitations of your recommender.
+- **Tiny catalog.** 42 songs, 17 genres, only 2–5 songs per genre. A metal fan always sees both metal songs.
+- **Genre acts as a filter bubble.** With the default weights, a genre match is worth more than any energy gain. A slow pop ballad can rank above a happy, high-energy song just because it is tagged pop.
+- **Exact-match text.** `Pop` is not `pop`, and unknown genres or moods (like `k-pop`) are silently ignored, so those users get an energy-only list.
+- **No input checks.** Energy above 1.0 gives negative points, and an empty profile scores every song 0.
+- **Mixed tastes break it.** "High-energy but sad" gets a slow ballad, and "peaceful metal" gets loud metal.
+- **Invented data.** The advanced columns (popularity, decade, tags and so on) were made up for this project, so results with them show how the scoring behaves, not real listening habits.
+- **No lyrics, artists or history.** It only compares a stated taste to each song's labels.
 
-Examples:
-
-- It only works on a tiny catalog
-- It does not understand lyrics or language
-- It might over favor one genre or mood
-
-You will go deeper on this in your model card.
+The full discussion is in the [model card](model_card.md).
 
 ---
 
 ## Reflection
 
-Read and complete `model_card.md`:
+Full model card: [**Model Card**](model_card.md)
 
-[**Model Card**](model_card.md)
+**How recommenders turn data into predictions.** This project showed me that a recommender is mostly a set of rules and weights. Each song gets points for matching genre, mood and energy, and the highest scores win. Because every score comes with reasons, I could always say why a song was picked. But the weights are opinions. When I made genre worth 2 points, songs like *Gym Hero* showed up for "Happy Pop" listeners, because "pop" counted for more than "happy". Changing the weights, switching ranking modes or adding a diversity penalty gave different lists, and none was simply "more accurate".
 
-Write 1 to 2 paragraphs here about what you learned:
-
-- about how recommenders turn data into predictions
-- about where bias or unfairness could show up in systems like this
-
-
-
+**Where bias or unfairness can show up.** Bias came from small choices: which weights I picked, which songs are in the catalog, and what the system treats as a match. A genre with two songs gets repeated. A listener who types `Pop` instead of `pop` loses their genre signal. A user with mixed taste gets answers that fit neither half. Real systems are much bigger, but the same kinds of choices can quietly leave some listeners out. I also learned to check AI-written work against the real data, since several details it suggested needed correcting.

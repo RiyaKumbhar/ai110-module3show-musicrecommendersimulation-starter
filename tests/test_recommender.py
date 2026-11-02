@@ -111,3 +111,23 @@ def test_table_shows_every_reason():
     assert "mood match: chill" in table
     assert "energy 0.40" in table
     assert len({len(line) for line in table.splitlines()}) == 1  # rectangular
+
+
+def test_recommender_ranks_by_user_taste():
+    rec = make_small_recommender()
+    pop_fan = UserProfile("pop", "happy", 0.8, False)
+    lofi_fan = UserProfile("lofi", "chill", 0.4, True)
+
+    assert rec.recommend(pop_fan, k=2)[0].title == "Test Pop Track"
+    assert rec.recommend(lofi_fan, k=2)[0].title == "Chill Lofi Loop"
+    assert len(rec.recommend(pop_fan, k=1)) == 1
+
+
+def test_explanation_lists_real_reasons():
+    rec = make_small_recommender()
+    user = UserProfile("pop", "happy", 0.8, False)
+
+    explanation = rec.explain_recommendation(user, rec.songs[0])
+    assert "genre match: pop" in explanation
+    assert "mood match: happy" in explanation
+    assert "energy" in explanation
