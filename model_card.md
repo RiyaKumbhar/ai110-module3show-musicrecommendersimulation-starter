@@ -111,6 +111,8 @@ I ran one experiment with genre = 1.0 and energy = 3.0. The code in `recommender
 - An empty profile scores every song 0. It returns the first five rows of the file.
 - Mixed tastes break it. "High-energy but sad" gets a slow ballad.
 
+**Ranking modes.** The program has three modes: Genre-First, Mood-First and Energy-Focused (see the README). Mood-First fixes the Gym Hero problem for Happy Pop. But every mode has a blind spot, so the bubble just moves. Mood-First lets mood override energy, and Energy-Focused ignores genre.
+
 **Does the weight shift fix it?**
 
 Partly. I halved genre and doubled energy. Mixed profiles got more sensible. But rock fans lost their rock songs. No single weight setting works for everyone.
