@@ -1,6 +1,6 @@
 import csv
 from typing import List, Dict, Tuple, Optional
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 @dataclass
 class Song:
@@ -41,17 +41,36 @@ class Recommender:
     """
     OOP implementation of the recommendation logic.
     Required by tests/test_recommender.py
+
+    Uses the same scoring rules as recommend_songs(). likes_acoustic is kept on
+    UserProfile but is not scored (acousticness is not part of the scoring rules).
     """
-    def __init__(self, songs: List[Song]):
+    def __init__(self, songs: List[Song], strategy: "RankingStrategy" = None):
         self.songs = songs
+        self.strategy = strategy or GENRE_FIRST
+
+    @staticmethod
+    def _prefs(user: UserProfile) -> Dict:
+        return {
+            "genre": user.favorite_genre,
+            "mood": user.favorite_mood,
+            "energy": user.target_energy,
+        }
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
-        # TODO: Implement recommendation logic
-        return self.songs[:k]
+        """Return the k best-scoring songs for this user, best first."""
+        prefs = self._prefs(user)
+        ranked = sorted(
+            self.songs,
+            key=lambda song: score_song(prefs, asdict(song), self.strategy)[0],
+            reverse=True,
+        )
+        return ranked[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
-        # TODO: Implement explanation logic
-        return "Explanation placeholder"
+        """Plain-language reasons for a song's score, e.g. 'genre match: pop (+2.0); ...'."""
+        _, reasons = score_song(self._prefs(user), asdict(song), self.strategy)
+        return "; ".join(reasons) or "no genre, mood or energy preferences matched"
 
 def load_songs(csv_path: str) -> List[Dict]:
     """Read songs.csv into a list of dicts, converting numeric columns to int/float.
