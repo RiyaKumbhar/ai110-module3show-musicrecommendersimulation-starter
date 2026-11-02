@@ -21,16 +21,31 @@ Prompts:
 
 ## 3. How the Model Works  
 
-Explain your scoring approach in simple language.  
+Think of the recommender as a judge at a talent show. You tell the judge three things about your taste: the genre you like, the mood you want, and how energetic you want the music to feel. The judge then listens to every song in the catalog, awards points, and hands you the songs with the most points.
 
-Prompts:  
+**What the judge looks at**
 
-- What features of each song are used (genre, energy, mood, etc.)  
-- What user preferences are considered  
-- How does the model turn those into a score  
-- What changes did you make from the starter logic  
+- **Genre:** does the song's genre match the one you asked for? If yes, it gets **2 points**. This is the biggest prize because genre is a broad, stable preference: someone who likes lofi rarely wants metal, whatever their mood.
+- **Mood:** does the song's mood match the one you asked for? If yes, it gets **1 point**. Mood matters, but moods overlap ("chill" and "relaxed" are close), so it counts for less than genre.
+- **Energy:** how close is the song's energy to the level you want? This is not a yes-or-no question. A perfect match earns the full **1.5 points**, and the further away the song is, the fewer points it gets. A very calm song earns almost nothing for someone who wants a high-energy workout track.
 
-Avoid code here. Pretend you are explaining the idea to a friend who does not program.
+A song can earn at most 4.5 points (2 + 1 + 1.5).
+
+**Turning points into recommendations**
+
+The judge scores every song one at a time, then lines them up from highest to lowest score and shows the top few (five by default). Each song also comes with a short list of reasons, such as "genre match: lofi (+2.0)", so you can see exactly why it was picked instead of just trusting a number.
+
+**A worked example**
+
+Say you ask for lofi, chill, and an energy of 0.40. *Midnight Coding* is a chill lofi song with an energy of 0.42. It gets 2 points for genre, 1 point for mood, and almost the full energy score (1.47) because 0.42 is so close to 0.40. Its total is 4.47, which puts it at the top.
+
+**What the judge does not look at**
+
+The song's tempo, how upbeat or sad it sounds (valence), how danceable it is, and how acoustic it is are all in the data but are not scored yet. The judge also knows nothing about lyrics, artists, or what you have listened to before. It only compares your stated taste to each song's labels.
+
+**Changes from the starter logic**
+
+The starter had no scoring rules, so I wrote the point system above, with genre worth the most and energy scored by closeness rather than "higher is better". I also made the program explain each score, and I grew the song list from 20 to 42 songs so that most genres have more than one song to choose from.
 
 ---
 
