@@ -21,17 +21,47 @@ Real-world platforms like Spotify and YouTube combine two ideas. **Collaborative
 
 ### Data flow
 
+```mermaid
+flowchart TD
+    subgraph S1["1. INPUT"]
+        CSV[("data/songs.csv<br/>42 songs, 16 columns")]
+        PREFS["User profile<br/>genre, mood, energy<br/>+ optional extras"]
+        MODE["Ranking mode<br/>Genre-First, Mood-First<br/>or Energy-Focused"]
+    end
+
+    subgraph S2["2. SCORE every song"]
+        LOAD["load_songs()<br/>list of song dicts"]
+        SS["score_song(prefs, song, mode)<br/>returns score + reasons"]
+    end
+
+    subgraph S3["3. RANK and SELECT"]
+        SORT["Sort by score, highest first"]
+        DIV{"--diverse?"}
+        PEN["Pick one at a time<br/>subtract points for repeat<br/>artist or genre"]
+        TOPK["Keep the top k (5)"]
+    end
+
+    subgraph S4["4. OUTPUT"]
+        LIST["Detailed list<br/>(default)"]
+        TABLE["ASCII table<br/>(--format table)"]
+    end
+
+    CSV --> LOAD --> SS
+    PREFS --> SS
+    MODE --> SS
+    SS --> DIV
+    DIV -- no --> SORT --> TOPK
+    DIV -- yes --> PEN --> TOPK
+    TOPK --> LIST
+    TOPK --> TABLE
 ```
-INPUT                     PROCESS (the loop)                          OUTPUT
-user_prefs         load_songs("data/songs.csv") -> list of song dicts
- genre, mood,              |
- energy, k                 v                                      ranked list
-      |            for song in songs:                             (top k, with
-      +----------->   score_song(prefs, song) -> (score, reasons)   reasons)
-                          |                                            ^
-                          v                                            |
-                   scored.append((song, score, reasons)) --> sort by score DESC, take [:k]
-```
+
+**How to read it**
+
+1. **Input.** Songs come from the CSV. The user profile says what they want. The ranking mode sets how much genre, mood and energy count.
+2. **Score.** Every song is scored on its own. The result is a number plus a list of reasons (for example `genre match: pop (+2.0)`). Extra profile keys (tags, decade, popularity, language, instrumental, explicit) add points only when the profile asks for them.
+3. **Rank and select.** By default, songs are sorted by score. With `--diverse`, songs are picked one at a time, and a song loses points if its artist or genre is already in the list. Either way, the top `k` are kept.
+4. **Output.** Each pick is shown with its score and reasons, as a list or as a table.
 
 ### Features used
 
