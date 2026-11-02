@@ -567,6 +567,33 @@ Six new columns were added to `data/songs.csv`: `popularity`, `release_decade`, 
 
 The new values are invented for this project, not real data. One finding: `explicit: False` only gives a +0.5 nudge, so an explicit song can still rank first for a "clean" profile.
 
+### Ranking modes (Strategy pattern)
+
+The ranking weights now live in a `RankingStrategy`, so you can switch modes from the command line:
+
+```text
+python3 src/main.py                         # Genre-First (default, original weights)
+python3 src/main.py --mode mood-first       # Mood-First
+python3 src/main.py --mode energy-focused   # Energy-Focused
+python3 src/main.py --compare               # top 5 titles for every profile under all three modes
+```
+
+| Mode | Genre | Mood | Energy | Best for |
+|---|---|---|---|---|
+| Genre-First | 2.0 | 1.0 | 1.5 | Listeners loyal to a genre |
+| Mood-First | 1.0 | 2.5 | 1.5 | Listeners who care how the song feels |
+| Energy-Focused | 0.5 | 0.5 | 3.0 | Workouts, studying, "match my energy" |
+
+What changed between modes (from `--compare`):
+
+- **High-Energy Pop:** Mood-First drops *Gym Hero* (pop but "intense") and *Glass Hearts* (pop but sad). It returns happy songs instead (*Verano Eterno*, *Rooftop Lights*, *Golden Fields*). This fixes the Gym Hero problem from the model card.
+- **High-Energy Sad:** Energy-Focused puts *Candy Static* first, so the energy request wins. Mood-First returns sad, slow songs (*Rainy Porch Blues*, *Tape Hiss Tuesday*), so the mood wins.
+- **Deep Intense Rock:** Mood-First and Energy-Focused give the same list. Both drop the quiet rock song *Porch Light Sessions* and bring in intense songs from other genres.
+- **Out-of-Range Energy (2.0):** Energy-Focused returns the highest-energy songs (*Iron Requiem*, *Bass Cathedral*), with negative scores. The ranking makes sense, but the scores show the input should have been rejected.
+- **Unchanged by mode:** Unknown Genre, Case Mismatch and Empty Profile give the same lists in every mode, because none of them match on genre or mood.
+
+Neither mode is "more accurate" for everyone. Each one trades one kind of match for another. See [ai_interactions.md](ai_interactions.md) for the design notes.
+
 Other ideas not yet tested: remove the mood check.
 
 ---

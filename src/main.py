@@ -9,7 +9,9 @@ You will implement the functions in recommender.py:
 - recommend_songs
 """
 
-from recommender import load_songs, max_score, recommend_songs
+import argparse
+
+from recommender import STRATEGIES, load_songs, max_score, recommend_songs
 
 
 PROFILES = {
@@ -55,12 +57,16 @@ ADVANCED_PROFILES = {
 }
 
 
-def main() -> None:
-    songs = load_songs("data/songs.csv")
+ALL_PROFILES = {**PROFILES, **ADVERSARIAL_PROFILES, **ADVANCED_PROFILES}
 
-    width = 60
-    for name, user_prefs in {**PROFILES, **ADVERSARIAL_PROFILES, **ADVANCED_PROFILES}.items():
-        recommendations = recommend_songs(user_prefs, songs, k=5)
+
+def show_ranking(songs, mode: str, width: int = 60) -> None:
+    """Print the top 5 with reasons for every profile, ranked by one strategy."""
+    strategy = STRATEGIES[mode]
+    print(f"Mode: {strategy.name}")
+
+    for name, user_prefs in ALL_PROFILES.items():
+        recommendations = recommend_songs(user_prefs, songs, k=5, strategy=strategy)
 
         print()
         print("=" * width)
@@ -69,12 +75,44 @@ def main() -> None:
 
         for rank, (song, score, explanation) in enumerate(recommendations, start=1):
             print(f"\n{rank}. {song['title']} - {song['artist']}")
-            print(f"   Score: {score:.2f} / {max_score(user_prefs):.2f}")
+            print(f"   Score: {score:.2f} / {max_score(user_prefs, strategy):.2f}")
             print("   Why:")
             for reason in explanation.split("; "):
                 print(f"     - {reason}")
 
     print("\n" + "=" * width)
+
+
+def compare_modes(songs, width: int = 60) -> None:
+    """Print each profile's top 5 song titles under every mode, to see what a mode changes."""
+    for name, user_prefs in ALL_PROFILES.items():
+        print()
+        print("=" * width)
+        print(name)
+        print("=" * width)
+        for mode, strategy in STRATEGIES.items():
+            titles = [s["title"] for s, _, _ in recommend_songs(user_prefs, songs, k=5, strategy=strategy)]
+            print(f"{strategy.name:>15}: " + " | ".join(titles))
+    print("\n" + "=" * width)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Music Recommender Simulation")
+    parser.add_argument(
+        "--mode", choices=sorted(STRATEGIES), default="genre-first",
+        help="ranking strategy to use (default: genre-first)",
+    )
+    parser.add_argument(
+        "--compare", action="store_true",
+        help="show every profile's top 5 under all modes, side by side",
+    )
+    args = parser.parse_args()
+
+    songs = load_songs("data/songs.csv")
+    if args.compare:
+        compare_modes(songs)
+    else:
+        show_ranking(songs, args.mode)
 
 
 if __name__ == "__main__":
