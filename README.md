@@ -11,7 +11,7 @@ Your goal is to:
 - Evaluate what your system gets right and wrong
 - Reflect on how this mirrors real world AI recommenders
 
-Replace this paragraph with your own summary of what your version does.
+**What my version does.** VibeFinder 1.0 is a small content-based music recommender. You give it a taste profile (genre, mood and an energy level, plus optional extras like mood tags, decade, popularity, language, instrumental and explicit), and it scores all 42 songs in `data/songs.csv` and returns the top 5, each with the reasons behind its score. It has three ranking modes (Genre-First, Mood-First, Energy-Focused), an optional diversity penalty so one artist or genre cannot fill the list, and a table view. I tested it with ordinary profiles and with trick profiles built to break it, and wrote up what I found in the [model card](model_card.md).
 
 ---
 
@@ -42,12 +42,16 @@ user_prefs         load_songs("data/songs.csv") -> list of song dicts
 - `mood` (categorical, scored as match / no match)
 - `energy` (0-1, scored by closeness)
 - `tempo_bpm`, `valence`, `danceability`, `acousticness` (loaded but **not scored** in the baseline; candidates for later experiments)
+- `popularity` (0-100), `release_decade`, `mood_tags` (3 per song), `language`, `explicit`, `instrumental` (added later; scored **only when a profile asks for them**, see "Advanced song features" below)
 
 **`UserProfile` object**
 
 - `favorite_genre`
 - `favorite_mood`
 - `target_energy`
+- `likes_acoustic` (kept on the object but not scored)
+
+The command-line runner uses a plain dict instead (`genre`, `mood`, `energy`, plus the optional keys `tags`, `decade`, `popularity`, `language`, `instrumental`, `explicit`).
 
 **Example profile used for planning:** `genre = lofi`, `mood = chill`, `target_energy = 0.40`, `k = 3`.
 
