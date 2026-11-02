@@ -111,6 +111,8 @@ I ran one experiment with genre = 1.0 and energy = 3.0. The code in `recommender
 - An empty profile scores every song 0. It returns the first five rows of the file.
 - Mixed tastes break it. "High-energy but sad" gets a slow ballad.
 
+**Diversity penalty.** One artist or genre can fill the whole top 5 (Chill Lofi returns LoRoom three times). The `--diverse` option takes 1.0 off a song for each song by the same artist already picked, and 0.5 for the same genre. This gives more varied lists, but a lofi fan then sees only 2 lofi songs. The penalty sizes are guesses, and I have not tested them with real listeners.
+
 **Ranking modes.** The program has three modes: Genre-First, Mood-First and Energy-Focused (see the README). Mood-First fixes the Gym Hero problem for Happy Pop. But every mode has a blind spot, so the bubble just moves. Mood-First lets mood override energy, and Energy-Focused ignores genre.
 
 **Does the weight shift fix it?**

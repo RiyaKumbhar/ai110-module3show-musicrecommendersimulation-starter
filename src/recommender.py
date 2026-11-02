@@ -196,13 +196,51 @@ def score_song(
 
     return score, reasons
 
+# Default diversity penalties (points taken off per song already picked by the same artist / genre)
+ARTIST_PENALTY = 1.0
+GENRE_PENALTY = 0.5
+
 def recommend_songs(
-    user_prefs: Dict, songs: List[Dict], k: int = 5, strategy: RankingStrategy = GENRE_FIRST
+    user_prefs: Dict,
+    songs: List[Dict],
+    k: int = 5,
+    strategy: RankingStrategy = GENRE_FIRST,
+    artist_penalty: float = 0.0,
+    genre_penalty: float = 0.0,
 ) -> List[Tuple[Dict, float, str]]:
-    """Score every song with the strategy and return the top k as (song, score, explanation), best first."""
-    scored = (
-        (song, score, "; ".join(reasons))
-        for song in songs
-        for score, reasons in [score_song(user_prefs, song, strategy)]
-    )
-    return sorted(scored, key=lambda item: item[1], reverse=True)[:k]
+    """Score every song with the strategy and return the top k as (song, score, explanation), best first.
+
+    Diversity penalty (off by default): when artist_penalty or genre_penalty is above 0,
+    songs are picked one at a time. Before each pick, a song loses artist_penalty points
+    for every song by the same artist already picked, and genre_penalty points for every
+    song of the same genre already picked. The score returned includes the penalty.
+    """
+    scored = [(song, *score_song(user_prefs, song, strategy)) for song in songs]
+
+    if artist_penalty <= 0 and genre_penalty <= 0:
+        ranked = sorted(scored, key=lambda item: item[1], reverse=True)[:k]
+        return [(song, score, "; ".join(reasons)) for song, score, reasons in ranked]
+
+    picked: List[Tuple[Dict, float, str]] = []
+    remaining = scored
+    while remaining and len(picked) < k:
+        best = None
+        for song, score, reasons in remaining:
+            same_artist = sum(1 for p, _, _ in picked if p["artist"] == song["artist"])
+            same_genre = sum(1 for p, _, _ in picked if p["genre"] == song["genre"])
+            penalty = artist_penalty * same_artist + genre_penalty * same_genre
+            if best is None or score - penalty > best[1]:
+                best = (song, score - penalty, reasons, same_artist, same_genre)
+        song, adjusted, reasons, same_artist, same_genre = best
+        notes = list(reasons)
+        if same_artist and artist_penalty > 0:
+            notes.append(
+                f"diversity penalty: {song['artist']} already in list (-{artist_penalty * same_artist:.2f})"
+            )
+        if same_genre and genre_penalty > 0:
+            notes.append(
+                f"diversity penalty: {song['genre']} already in list (-{genre_penalty * same_genre:.2f})"
+            )
+        picked.append((song, adjusted, "; ".join(notes)))
+        remaining = [r for r in remaining if r[0] is not song]
+    return picked

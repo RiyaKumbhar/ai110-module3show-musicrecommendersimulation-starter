@@ -594,6 +594,79 @@ What changed between modes (from `--compare`):
 
 Neither mode is "more accurate" for everyone. Each one trades one kind of match for another. See [ai_interactions.md](ai_interactions.md) for the design notes.
 
+### Diversity penalty and table output
+
+**Diversity penalty (`--diverse`).** The plain ranking can fill the whole top 5 with one artist or genre. For Chill Lofi it returns LoRoom three times and lofi five times. With `--diverse`, songs are picked one at a time. A song loses **1.0 point for each song by the same artist** already picked, and **0.5 points for each song of the same genre** already picked. The #1 song never changes, and each penalty is shown in the song's reasons.
+
+**Table (`--format table`).** Prints each profile's top 5 as an ASCII table that includes every reason for the score. It uses only the standard library (no `tabulate` dependency). The flags work together, e.g. `python3 src/main.py --mode mood-first --diverse --format table`.
+
+Chill Lofi without the penalty:
+
+```text
+============================================================
+Chill Lofi: {'genre': 'lofi', 'mood': 'chill', 'energy': 0.35}
+============================================================
++---+-------------------+----------------+-------+-----------+------------------------------------------------+
+| # | Title             | Artist         | Genre | Score     | Why (reasons)                                  |
++---+-------------------+----------------+-------+-----------+------------------------------------------------+
+| 1 | Library Rain      | Paper Lanterns | lofi  | 4.50/4.50 | - genre match: lofi (+2.0)                     |
+|   |                   |                |       |           | - mood match: chill (+1.0)                     |
+|   |                   |                |       |           | - energy 0.35 is 0.00 from target 0.35 (+1.50) |
++---+-------------------+----------------+-------+-----------+------------------------------------------------+
+| 2 | Midnight Coding   | LoRoom         | lofi  | 4.39/4.50 | - genre match: lofi (+2.0)                     |
+|   |                   |                |       |           | - mood match: chill (+1.0)                     |
+|   |                   |                |       |           | - energy 0.42 is 0.07 from target 0.35 (+1.40) |
++---+-------------------+----------------+-------+-----------+------------------------------------------------+
+| 3 | Tape Hiss Tuesday | LoRoom         | lofi  | 3.47/4.50 | - genre match: lofi (+2.0)                     |
+|   |                   |                |       |           | - energy 0.33 is 0.02 from target 0.35 (+1.47) |
++---+-------------------+----------------+-------+-----------+------------------------------------------------+
+| 4 | Focus Flow        | LoRoom         | lofi  | 3.42/4.50 | - genre match: lofi (+2.0)                     |
+|   |                   |                |       |           | - energy 0.40 is 0.05 from target 0.35 (+1.42) |
++---+-------------------+----------------+-------+-----------+------------------------------------------------+
+| 5 | Study Hall Static | Paper Lanterns | lofi  | 3.36/4.50 | - genre match: lofi (+2.0)                     |
+|   |                   |                |       |           | - energy 0.44 is 0.09 from target 0.35 (+1.36) |
++---+-------------------+----------------+-------+-----------+------------------------------------------------+
+```
+
+Chill Lofi with `--diverse`:
+
+```text
+============================================================
+Chill Lofi: {'genre': 'lofi', 'mood': 'chill', 'energy': 0.35}
+============================================================
++---+----------------------+----------------+---------+-----------+---------------------------------------------------+
+| # | Title                | Artist         | Genre   | Score     | Why (reasons)                                     |
++---+----------------------+----------------+---------+-----------+---------------------------------------------------+
+| 1 | Library Rain         | Paper Lanterns | lofi    | 4.50/4.50 | - genre match: lofi (+2.0)                        |
+|   |                      |                |         |           | - mood match: chill (+1.0)                        |
+|   |                      |                |         |           | - energy 0.35 is 0.00 from target 0.35 (+1.50)    |
++---+----------------------+----------------+---------+-----------+---------------------------------------------------+
+| 2 | Midnight Coding      | LoRoom         | lofi    | 3.89/4.50 | - genre match: lofi (+2.0)                        |
+|   |                      |                |         |           | - mood match: chill (+1.0)                        |
+|   |                      |                |         |           | - energy 0.42 is 0.07 from target 0.35 (+1.40)    |
+|   |                      |                |         |           | - diversity penalty: lofi already in list (-0.50) |
++---+----------------------+----------------+---------+-----------+---------------------------------------------------+
+| 3 | Slow Dance Dim       | Sable Monroe   | r&b     | 2.42/4.50 | - mood match: chill (+1.0)                        |
+|   |                      |                |         |           | - energy 0.40 is 0.05 from target 0.35 (+1.42)    |
++---+----------------------+----------------+---------+-----------+---------------------------------------------------+
+| 4 | Porch Light Sessions | Hazel Creek    | rock    | 2.41/4.50 | - mood match: chill (+1.0)                        |
+|   |                      |                |         |           | - energy 0.41 is 0.06 from target 0.35 (+1.41)    |
++---+----------------------+----------------+---------+-----------+---------------------------------------------------+
+| 5 | Spacewalk Thoughts   | Orbit Bloom    | ambient | 2.40/4.50 | - mood match: chill (+1.0)                        |
+|   |                      |                |         |           | - energy 0.28 is 0.07 from target 0.35 (+1.40)    |
++---+----------------------+----------------+---------+-----------+---------------------------------------------------+
+```
+
+Distinct artists and genres in the top 5, plain vs `--diverse` (from running all 14 profiles):
+
+- Chill Lofi: 2 artists → 5, 1 genre → 4.
+- Out-of-Range Energy: 2 artists → 5, 1 genre → 4.
+- Instrumental Study Session: 2 artists → 4, 1 genre → 3.
+- High-Energy Pop: 4 artists → 5, 2 genres → 4.
+- The top-ranked song is the same in every profile. Unknown Genre and Retro Jazz Purist show no change in these counts. (Empty Profile goes from 3 genres to 5, but its list is just the first rows of the file, so that says little.)
+
+**Trade-off.** A lofi fan now sees only 2 lofi songs out of 5. The other three are chill songs from rock, r&b and ambient. That is more varied, but it is also less faithful to the genre they asked for. The penalty sizes (1.0 and 0.5) are my guesses, not tuned values.
+
 Other ideas not yet tested: remove the mood check.
 
 ---
