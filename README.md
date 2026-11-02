@@ -175,13 +175,399 @@ Top 5 for: genre=pop, mood=happy, energy=0.8
 
 ---
 
+## Adversarial and Edge-Case Profile Results
+
+These profiles try to trick the scoring logic (genre 2.0 + mood 1.0 + energy 1.5). Output below is pasted from `python3 src/main.py`.
+
+### Standard profiles
+
+#### High-Energy Pop
+
+```text
+============================================================
+High-Energy Pop: {'genre': 'pop', 'mood': 'happy', 'energy': 0.9}
+============================================================
+
+1. Sunrise City - Neon Echo
+   Score: 4.38 / 4.50
+   Why:
+     - genre match: pop (+2.0)
+     - mood match: happy (+1.0)
+     - energy 0.82 is 0.08 from target 0.90 (+1.38)
+
+2. Candy Static - Neon Echo
+   Score: 3.47 / 4.50
+   Why:
+     - genre match: pop (+2.0)
+     - energy 0.88 is 0.02 from target 0.90 (+1.47)
+
+3. Gym Hero - Max Pulse
+   Score: 3.46 / 4.50
+   Why:
+     - genre match: pop (+2.0)
+     - energy 0.93 is 0.03 from target 0.90 (+1.46)
+
+4. Glass Hearts - Mira Lane
+   Score: 2.72 / 4.50
+   Why:
+     - genre match: pop (+2.0)
+     - energy 0.38 is 0.52 from target 0.90 (+0.72)
+
+5. Verano Eterno - Luna Cortez
+   Score: 2.32 / 4.50
+   Why:
+     - mood match: happy (+1.0)
+     - energy 0.78 is 0.12 from target 0.90 (+1.32)
+============================================================
+```
+
+#### Chill Lofi
+
+```text
+============================================================
+Chill Lofi: {'genre': 'lofi', 'mood': 'chill', 'energy': 0.35}
+============================================================
+
+1. Library Rain - Paper Lanterns
+   Score: 4.50 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - mood match: chill (+1.0)
+     - energy 0.35 is 0.00 from target 0.35 (+1.50)
+
+2. Midnight Coding - LoRoom
+   Score: 4.39 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - mood match: chill (+1.0)
+     - energy 0.42 is 0.07 from target 0.35 (+1.40)
+
+3. Tape Hiss Tuesday - LoRoom
+   Score: 3.47 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - energy 0.33 is 0.02 from target 0.35 (+1.47)
+
+4. Focus Flow - LoRoom
+   Score: 3.42 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - energy 0.40 is 0.05 from target 0.35 (+1.42)
+
+5. Study Hall Static - Paper Lanterns
+   Score: 3.36 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - energy 0.44 is 0.09 from target 0.35 (+1.36)
+============================================================
+```
+
+#### Deep Intense Rock
+
+```text
+============================================================
+Deep Intense Rock: {'genre': 'rock', 'mood': 'intense', 'energy': 0.95}
+============================================================
+
+1. Storm Runner - Voltline
+   Score: 4.44 / 4.50
+   Why:
+     - genre match: rock (+2.0)
+     - mood match: intense (+1.0)
+     - energy 0.91 is 0.04 from target 0.95 (+1.44)
+
+2. Highway Static - Voltline
+   Score: 3.33 / 4.50
+   Why:
+     - genre match: rock (+2.0)
+     - energy 0.84 is 0.11 from target 0.95 (+1.33)
+
+3. Porch Light Sessions - Hazel Creek
+   Score: 2.69 / 4.50
+   Why:
+     - genre match: rock (+2.0)
+     - energy 0.41 is 0.54 from target 0.95 (+0.69)
+
+4. Shatter the Sky - Black Anvil
+   Score: 2.50 / 4.50
+   Why:
+     - mood match: intense (+1.0)
+     - energy 0.95 is 0.00 from target 0.95 (+1.50)
+
+5. Bass Cathedral - Circuit Bloom
+   Score: 2.48 / 4.50
+   Why:
+     - mood match: intense (+1.0)
+     - energy 0.96 is 0.01 from target 0.95 (+1.48)
+============================================================
+```
+
+### Adversarial profiles
+
+#### Conflicting: High-Energy Sad
+
+```text
+============================================================
+Conflicting: High-Energy Sad: {'genre': 'pop', 'mood': 'sad', 'energy': 0.9}
+============================================================
+
+1. Glass Hearts - Mira Lane
+   Score: 3.72 / 4.50
+   Why:
+     - genre match: pop (+2.0)
+     - mood match: sad (+1.0)
+     - energy 0.38 is 0.52 from target 0.90 (+0.72)
+
+2. Candy Static - Neon Echo
+   Score: 3.47 / 4.50
+   Why:
+     - genre match: pop (+2.0)
+     - energy 0.88 is 0.02 from target 0.90 (+1.47)
+
+3. Gym Hero - Max Pulse
+   Score: 3.46 / 4.50
+   Why:
+     - genre match: pop (+2.0)
+     - energy 0.93 is 0.03 from target 0.90 (+1.46)
+
+4. Sunrise City - Neon Echo
+   Score: 3.38 / 4.50
+   Why:
+     - genre match: pop (+2.0)
+     - energy 0.82 is 0.08 from target 0.90 (+1.38)
+
+5. Rainy Porch Blues - Delta Ray
+   Score: 1.83 / 4.50
+   Why:
+     - mood match: sad (+1.0)
+     - energy 0.45 is 0.45 from target 0.90 (+0.83)
+============================================================
+```
+
+**Observation:** Glass Hearts (energy 0.38) wins because genre + mood points outweigh a large energy miss. The user asked for high energy, but gets the quietest pop song first. Mood (+1.0) can outvote energy when only one song has the sad tag in that genre.
+
+#### Conflicting: Peaceful Metal
+
+```text
+============================================================
+Conflicting: Peaceful Metal: {'genre': 'metal', 'mood': 'peaceful', 'energy': 0.1}
+============================================================
+
+1. Quiet Cathedral - Elena Voss
+   Score: 2.38 / 4.50
+   Why:
+     - mood match: peaceful (+1.0)
+     - energy 0.18 is 0.08 from target 0.10 (+1.38)
+
+2. Drift Between Stars - Orbit Bloom
+   Score: 2.32 / 4.50
+   Why:
+     - mood match: peaceful (+1.0)
+     - energy 0.22 is 0.12 from target 0.10 (+1.32)
+
+3. Shatter the Sky - Black Anvil
+   Score: 2.23 / 4.50
+   Why:
+     - genre match: metal (+2.0)
+     - energy 0.95 is 0.85 from target 0.10 (+0.23)
+
+4. Iron Requiem - Black Anvil
+   Score: 2.19 / 4.50
+   Why:
+     - genre match: metal (+2.0)
+     - energy 0.97 is 0.87 from target 0.10 (+0.20)
+
+5. Sonata in Rain - Elena Voss
+   Score: 1.35 / 4.50
+   Why:
+     - energy 0.20 is 0.10 from target 0.10 (+1.35)
+============================================================
+```
+
+**Observation:** The categorical weights fight each other. Two peaceful songs from other genres beat the metal songs, and the metal songs (energy ~0.95 vs target 0.1) still rank 3rd and 4th on genre points alone, ahead of a song with a near-perfect energy match (#5).
+
+#### Unknown Genre and Mood
+
+```text
+============================================================
+Unknown Genre and Mood: {'genre': 'k-pop', 'mood': 'hyperpop', 'energy': 0.5}
+============================================================
+
+1. Dusty Back Road - Hazel Creek
+   Score: 1.47 / 4.50
+   Why:
+     - energy 0.52 is 0.02 from target 0.50 (+1.47)
+
+2. Sunset Skank - Kingston Tide
+   Score: 1.47 / 4.50
+   Why:
+     - energy 0.48 is 0.02 from target 0.50 (+1.47)
+
+3. Blue Note Lounge - Slow Stereo
+   Score: 1.44 / 4.50
+   Why:
+     - energy 0.46 is 0.04 from target 0.50 (+1.44)
+
+4. Velvet Hours - Sable Monroe
+   Score: 1.42 / 4.50
+   Why:
+     - energy 0.55 is 0.05 from target 0.50 (+1.42)
+
+5. Rainy Porch Blues - Delta Ray
+   Score: 1.42 / 4.50
+   Why:
+     - energy 0.45 is 0.05 from target 0.50 (+1.42)
+============================================================
+```
+
+**Observation:** No genre or mood matches, so the ranking silently collapses to energy closeness only. Scores top out at 1.47 and the results span jazz, reggae, country and blues, with nothing to tell the user their genre was not recognized.
+
+#### Case Mismatch
+
+```text
+============================================================
+Case Mismatch: {'genre': 'Pop', 'mood': 'Happy', 'energy': 0.8}
+============================================================
+
+1. Sunrise City - Neon Echo
+   Score: 1.47 / 4.50
+   Why:
+     - energy 0.82 is 0.02 from target 0.80 (+1.47)
+
+2. Concrete Crown - Lyric Vandal
+   Score: 1.47 / 4.50
+   Why:
+     - energy 0.78 is 0.02 from target 0.80 (+1.47)
+
+3. Verano Eterno - Luna Cortez
+   Score: 1.47 / 4.50
+   Why:
+     - energy 0.78 is 0.02 from target 0.80 (+1.47)
+
+4. Neon Alley - Neon Echo
+   Score: 1.46 / 4.50
+   Why:
+     - energy 0.83 is 0.03 from target 0.80 (+1.46)
+
+5. Highway Static - Voltline
+   Score: 1.44 / 4.50
+   Why:
+     - energy 0.84 is 0.04 from target 0.80 (+1.44)
+============================================================
+```
+
+**Observation:** `Pop` / `Happy` never match `pop` / `happy` because comparison is exact-string. The user loses 3.0 points of signal and gets an energy-only list, even though Sunrise City is the ideal answer.
+
+#### Out-of-Range Energy
+
+```text
+============================================================
+Out-of-Range Energy: {'genre': 'lofi', 'mood': 'chill', 'energy': 2.0}
+============================================================
+
+1. Midnight Coding - LoRoom
+   Score: 2.13 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - mood match: chill (+1.0)
+     - energy 0.42 is 1.58 from target 2.00 (+-0.87)
+
+2. Library Rain - Paper Lanterns
+   Score: 2.03 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - mood match: chill (+1.0)
+     - energy 0.35 is 1.65 from target 2.00 (+-0.97)
+
+3. Study Hall Static - Paper Lanterns
+   Score: 1.16 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - energy 0.44 is 1.56 from target 2.00 (+-0.84)
+
+4. Focus Flow - LoRoom
+   Score: 1.10 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - energy 0.40 is 1.60 from target 2.00 (+-0.90)
+
+5. Tape Hiss Tuesday - LoRoom
+   Score: 1.00 / 4.50
+   Why:
+     - genre match: lofi (+2.0)
+     - energy 0.33 is 1.67 from target 2.00 (+-1.00)
+============================================================
+```
+
+**Observation:** Energy 2.0 is not validated. The gap exceeds 1, so the energy term goes negative (`+-0.87`). Scores are dragged down and the ranking order inverts: Midnight Coding (0.42) now beats Library Rain (0.35) because higher energy looks "closer" to 2.0.
+
+#### Empty Profile
+
+```text
+============================================================
+Empty Profile: {}
+============================================================
+
+1. Sunrise City - Neon Echo
+   Score: 0.00 / 4.50
+   Why:
+     - 
+
+2. Midnight Coding - LoRoom
+   Score: 0.00 / 4.50
+   Why:
+     - 
+
+3. Storm Runner - Voltline
+   Score: 0.00 / 4.50
+   Why:
+     - 
+
+4. Library Rain - Paper Lanterns
+   Score: 0.00 / 4.50
+   Why:
+     - 
+
+5. Gym Hero - Max Pulse
+   Score: 0.00 / 4.50
+   Why:
+     -
+============================================================
+```
+
+**Observation:** Every song scores 0.00, so the top 5 is just the first five rows of the CSV (sort is stable) and the explanation is an empty bullet. The recommender should fall back to a default or say it has no preferences to work with.
+
+---
+
 ## Experiments You Tried
 
-Use this section to document the experiments you ran. For example:
+### Weight shift: genre halved, energy doubled
 
-- What happened when you changed the weight on genre from 2.0 to 0.5
-- What happened when you added tempo or valence to the score
-- How did your system behave for different types of users
+**Change:** in `recommender.py`, `GENRE_WEIGHT` 2.0 → 1.0 and `ENERGY_WEIGHT` 1.5 → 3.0 (mood unchanged at 1.0). The maximum score moves from 4.5 to 5.0, so `MAX_SCORE` is now computed from the weights and `main.py` prints it instead of a hardcoded `4.50`.
+
+**Math check:** scoring all 42 songs against every genre/mood combination at energy 0, 0.25, 0.5, 0.75 and 1 gives scores between 0.09 and 5.00, so scores stay in range and the best possible score equals `MAX_SCORE`. Out-of-range energy (e.g. 2.0) still produces negative energy points, as before.
+
+**Top-5 changes per profile (before → after):**
+
+| Profile | Result |
+|---|---|
+| High-Energy Pop | Top 3 unchanged. #4 Glass Hearts (energy 0.38) dropped out and was replaced by the better energy fits Verano Eterno and Rooftop Lights. |
+| Chill Lofi | Top 4 unchanged. #5 changed from Study Hall Static to Slow Dance Dim. |
+| Deep Intense Rock | Storm Runner still #1. Rock songs fell back: Highway Static went from #2 to #5, and non-rock songs (Gym Hero) entered the top 5 on mood plus energy. |
+| Conflicting: High-Energy Sad | Glass Hearts fell from #1 to #4. Candy Static now ranks first, which matches the requested energy. |
+| Conflicting: Peaceful Metal | The two metal songs (energy ~0.95) disappeared from the top 5, replaced by low-energy songs. |
+| Out-of-Range Energy | Lofi songs lost their genre advantage; Iron Requiem, Bass Cathedral and Neon Pulse entered the top 5. |
+| Unknown Genre/Mood, Case Mismatch, Empty Profile | Unchanged. These never matched on genre or mood, so genre weight did not matter. |
+
+**Verdict: more accurate for energy, but only different for genre.** For the conflicting profiles the new ranking follows the stated energy target better. The "sad but high-energy" user no longer gets a quiet ballad first, and "peaceful metal" no longer returns 0.95-energy metal. For the Rock profile, though, a user who asked for rock now gets non-rock songs in the top 5, which is arguably worse. It also does not fix the real bugs from the edge-case profiles (case sensitivity, unknown values, empty profile, energy validation). Overall the change trades genre loyalty for energy closeness; it is not strictly better.
+
+### Advanced song features
+
+Six new columns were added to `data/songs.csv`: `popularity`, `release_decade`, `mood_tags`, `language`, `explicit` and `instrumental`. The scorer uses them only when a profile asks (keys `tags`, `decade`, `popularity`, `language`, `instrumental`, `explicit`), so the earlier profiles score exactly as before. The printed maximum now depends on the profile, e.g. `/ 7.00` for a profile that asks for every feature. Five new profiles in `main.py` (`ADVANCED_PROFILES`) exercise them. Details, weights and verification notes are in [ai_interactions.md](ai_interactions.md).
+
+The new values are invented for this project, not real data. One finding: `explicit: False` only gives a +0.5 nudge, so an explicit song can still rank first for a "clean" profile.
+
+Other ideas not yet tested: remove the mood check.
 
 ---
 
